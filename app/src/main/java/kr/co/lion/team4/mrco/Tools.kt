@@ -56,7 +56,7 @@ class Tools {
     }
 }
 
-// MainActivity에서 보여줄 프래그먼트들의 이름
+// MainActivity에서 보여줄 프래그먼트들의 이름s
 enum class MainFragmentName(var str:String){
     LOGIN_FRAGMENT("LoginFragment"),
     JOIN_FRAGMENT("JoinFragment"),
