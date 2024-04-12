@@ -1,20 +1,31 @@
 package kr.co.lion.team4.mrco.fragment
 
+import android.content.DialogInterface
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kr.co.lion.team4.mrco.MainActivity
-import kr.co.lion.team4.mrco.R
 import kr.co.lion.team4.mrco.MainFragmentName
+import kr.co.lion.team4.mrco.R
+import kr.co.lion.team4.mrco.Tools
 import kr.co.lion.team4.mrco.databinding.FragmentJoinBinding
+import kr.co.lion.team4.mrco.viewmodel.JoinViewModel
 
 
 class JoinFragment : Fragment() {
 
     lateinit var fragmentJoinBinding: FragmentJoinBinding
     lateinit var mainActivity: MainActivity
+
+    lateinit var joinViewModel: JoinViewModel
+
+    // 아이디 중복 확인 검사를 했는지..
+    // true면 아이디 중복 확인 검사를 완료한 것으로 취급한다.
+    var checkUserIdDuplicate = false
 
 
     override fun onCreateView(
@@ -23,17 +34,172 @@ class JoinFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
 
-        fragmentJoinBinding = FragmentJoinBinding.inflate(inflater)
+        //fragmentJoinBinding = FragmentJoinBinding.inflate(inflater)
+        // 바인딩 객체를 생성한다. ViewBinding의 기능을 포함한다
+        // 첫 번째 : LayoutInflater
+        // 두 번째 : 화면을 만들 때 사용할 layout폴더의 xml 파일
+        // 세 번째 : xml 을 통해서 만들어진 화면을 누가 관리하게 할 것인가. 여기서는 Fragment를 의미한다.
+        // 네 번째 : Fragment 상태에 영향을 받을 것인가...
+        fragmentJoinBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_join, container, false)
+        // ViewModel 객체를 생성한다.
+        joinViewModel = JoinViewModel()
+        // 생성한 ViewModel 객체를 layout 파일에 설정해준다.
+        fragmentJoinBinding.joinViewModel = joinViewModel
+        // ViewModel의 생명 주기를 Fragment와 일치시킨다. Fragment가 살아 있을 때 ViewModel 객체도 살아 있겠금 해준다.
+        fragmentJoinBinding.lifecycleOwner = this
+
         mainActivity = activity as MainActivity
 
         settingButtonJoinSubmit()
+        settingTextField()
+        settingButtonJoinCheckId()
+        settingMBTIEditText()
 
         return fragmentJoinBinding.root
     }
 
+    // 입력요소 초기설정
+    fun settingTextField(){
+        // 입력 요소들을 초기화 한다.
+        joinViewModel.textFieldJoinUserId.value = ""
+        joinViewModel.textFieldJoinUserPw.value = ""
+        joinViewModel.textFieldJoinUserPw2.value = ""
+
+        //부가정보
+        //이름
+        joinViewModel.textFieldJoinUserName.value = ""
+        //이메일
+        joinViewModel.textFieldJoinUserEmail.value = ""
+        //MBTI
+        joinViewModel.textFieldJoinUserMBTI.value = ""
+        //성별
+        joinViewModel.checkBoxJoinMale.value = true
+        joinViewModel.checkBoxJoinFemale.value = false
+        //동의 선택01
+        joinViewModel.checkBoxJoinUserConsent01.value = true
+        //동의 선택02
+        joinViewModel.checkBoxJoinUserConsent02.value = true
+
+        // 첫 번째 입력 요소에 포커스를 준다.
+        Tools.showSoftInput(mainActivity, fragmentJoinBinding.textFieldJoinUserId)
+    }
+
+    fun settingMBTIEditText(){
+        fragmentJoinBinding.textFieldJoinUserMBTI.setOnClickListener {
+            showMbtiBottomSheet()
+        }
+    }
+
+    // BottomSheet를 띄워준다.
+    fun showMbtiBottomSheet(){
+        val mbtiBottomSheetFragment = MbtiBottomSheetFragment()
+        mbtiBottomSheetFragment.show(mainActivity.supportFragmentManager, "MbtiBottomSheet")
+    }
+
     fun settingButtonJoinSubmit(){
         fragmentJoinBinding.buttonJoinSubmit.setOnClickListener {
-            mainActivity.removeFragment(MainFragmentName.JOIN_FRAGMENT)
+            // 입력을 검사한다.
+            val validation = checkJoinTextInput()
+            // 입력이 모두 잘 되어 있다면..
+            if(validation == true) {
+                // 키보드를 내려준다.
+                Tools.hideSoftInput(mainActivity)
+
+                val materialAlertDialogBuilder = MaterialAlertDialogBuilder(mainActivity)
+                materialAlertDialogBuilder.setTitle("가입완료")
+                materialAlertDialogBuilder.setMessage("가입이 완료되었습니다\n로그인해주세요")
+
+                materialAlertDialogBuilder.setPositiveButton("확인") { dialogInterface: DialogInterface, i: Int ->
+                    mainActivity.removeFragment(MainFragmentName.JOIN_FRAGMENT)
+                }
+
+                materialAlertDialogBuilder.show()
+            }
+
+        }
+    }
+
+
+    // 입력요소 유효성 검사 메서드
+    fun checkJoinTextInput():Boolean{
+
+        // 사용자가 입력한 내용을 가져온다
+        val userId = joinViewModel.textFieldJoinUserId.value!!
+        val userPw = joinViewModel.textFieldJoinUserPw.value!!
+        val userPw2 = joinViewModel.textFieldJoinUserPw2.value!!
+
+        //이름
+        val userName = joinViewModel.textFieldJoinUserName.value!!
+        //이메일
+        val userEmail = joinViewModel.textFieldJoinUserEmail.value!!
+        //MBTI
+        val userMBTI = joinViewModel.textFieldJoinUserMBTI.value!!
+
+        // 아이디를 입력하지 않았다면
+        if(userId.isEmpty()){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserId, "아이디 입력 오류",
+                "아이디를 입력해주세요")
+            return false
+        }
+
+        // 비밀번호를 입력하지 않았다면
+        if(userPw.isEmpty()){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserPw, "비밀번호 입력 오류",
+                "비밀번호를 입력해주세요")
+            return false
+        }
+
+        // 비밀번호 확인을 입력하지 않았다면
+        if(userPw2.isEmpty()){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserPw2, "비밀번호 입력 오류",
+                "비밀번호를 입력해주세요")
+            return false
+        }
+
+        // 입력한 비밀번호가 서로 다르다면
+        if(userPw != userPw2){
+            joinViewModel.textFieldJoinUserPw.value = ""
+            joinViewModel.textFieldJoinUserPw2.value = ""
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserPw, "비밀번호 입력 오류",
+                "비밀번호가 다릅니다")
+            return false
+        }
+
+        // 아이디 중복확인을 하지 않았다면..
+        if(checkUserIdDuplicate == false){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserId, "아이디 중복 확인 오류",
+                "아이디 중복확인을 해주세요")
+            return false
+        }
+
+        // 이름을 입력하지 않았다면
+        if(userName.isEmpty()){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserName, "이름 입력 오류",
+                "이름을 입력해주세요")
+            return false
+        }
+
+        // 이메일을 입력하지 않았다면
+        if(userEmail.isEmpty()){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserEmail, "이메일 입력 오류",
+                "이메일을 입력해주세요")
+            return false
+        }
+
+        // MBTI를 입력하지 않았다면
+        if(userMBTI.isEmpty()){
+            Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserMBTI, "MBTI 입력 오류",
+                "MBTI를 입력해주세요")
+            return false
+        }
+
+        return true
+    }
+
+    // 중복확인 버튼
+    fun settingButtonJoinCheckId(){
+        fragmentJoinBinding.buttonJoinCheckId.setOnClickListener {
+            checkUserIdDuplicate = true
         }
     }
 
