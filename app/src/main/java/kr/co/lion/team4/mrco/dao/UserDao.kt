@@ -183,7 +183,7 @@ class UserDao {
 //            job1.join()
 //        }
 
-        // 사용자의 상태를 변경하는 메서드
+        // 사용자의 상태를 변경하는 (회원탈퇴) 메서드
         suspend fun updateUserState(userIdx:Int, newState: UserState){
             val job1 = CoroutineScope(Dispatchers.IO).launch {
                 // 컬렉션에 접근할 수 있는 객체를 가져온다.

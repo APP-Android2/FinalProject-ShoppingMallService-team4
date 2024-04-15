@@ -200,3 +200,9 @@ enum class UserState(var str:String, var num:Int){
     USER_STATE_SIGNOUT("탈퇴", 2),
 }
 
+// 남자 또는 여자를 나타내는 값을 정의한다.
+enum class Gender(var str:String, var num:Int){
+    MALE("male", 1),
+    FEMALE("female", 2)
+}
+

@@ -8,11 +8,17 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kr.co.lion.team4.mrco.MainActivity
 import kr.co.lion.team4.mrco.MainFragmentName
 import kr.co.lion.team4.mrco.R
 import kr.co.lion.team4.mrco.Tools
+import kr.co.lion.team4.mrco.UserState
+import kr.co.lion.team4.mrco.dao.UserDao
 import kr.co.lion.team4.mrco.databinding.FragmentJoinBinding
+import kr.co.lion.team4.mrco.model.UserModel
 import kr.co.lion.team4.mrco.viewmodel.JoinViewModel
 
 
@@ -25,7 +31,7 @@ class JoinFragment : Fragment() {
 
     // 아이디 중복 확인 검사를 했는지..
     // true면 아이디 중복 확인 검사를 완료한 것으로 취급한다.
-    var checkUserIdDuplicate = false
+    var checkUserIdNotDuplicate = false
 
 
     override fun onCreateView(
@@ -105,15 +111,18 @@ class JoinFragment : Fragment() {
                 // 키보드를 내려준다.
                 Tools.hideSoftInput(mainActivity)
 
-                val materialAlertDialogBuilder = MaterialAlertDialogBuilder(mainActivity)
-                materialAlertDialogBuilder.setTitle("가입완료")
-                materialAlertDialogBuilder.setMessage("가입이 완료되었습니다\n로그인해주세요")
+                // 사용자 정보를 저장한다.
+                saveUserData()
 
-                materialAlertDialogBuilder.setPositiveButton("확인") { dialogInterface: DialogInterface, i: Int ->
-                    mainActivity.removeFragment(MainFragmentName.JOIN_FRAGMENT)
-                }
-
-                materialAlertDialogBuilder.show()
+//                val materialAlertDialogBuilder = MaterialAlertDialogBuilder(mainActivity)
+//                materialAlertDialogBuilder.setTitle("가입완료")
+//                materialAlertDialogBuilder.setMessage("가입이 완료되었습니다\n로그인해주세요")
+//
+//                materialAlertDialogBuilder.setPositiveButton("확인") { dialogInterface: DialogInterface, i: Int ->
+//                    mainActivity.removeFragment(MainFragmentName.JOIN_FRAGMENT)
+//                }
+//
+//                materialAlertDialogBuilder.show()
             }
 
         }
@@ -166,7 +175,7 @@ class JoinFragment : Fragment() {
         }
 
         // 아이디 중복확인을 하지 않았다면..
-        if(checkUserIdDuplicate == false){
+        if(checkUserIdNotDuplicate == false){
             Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserId, "아이디 중복 확인 오류",
                 "아이디 중복확인을 해주세요")
             return false
@@ -199,7 +208,62 @@ class JoinFragment : Fragment() {
     // 중복확인 버튼
     fun settingButtonJoinCheckId(){
         fragmentJoinBinding.buttonJoinCheckId.setOnClickListener {
-            checkUserIdDuplicate = true
+            CoroutineScope(Dispatchers.Main).launch {
+                checkUserIdNotDuplicate = UserDao.checkUserIdExist(joinViewModel?.textFieldJoinUserId?.value!!)
+                // Log.d("test1234", "$checkUserIdExist")
+                if(checkUserIdNotDuplicate == false) {
+                    joinViewModel?.textFieldJoinUserId?.value = ""
+                    Tools.showErrorDialog(mainActivity, fragmentJoinBinding.textFieldJoinUserId,
+                        "아이디 입력 오류", "존재하는 아이디입니다\n다른 아이디를 입력해주세요")
+                } else {
+                    val materialAlertDialogBuilder = MaterialAlertDialogBuilder(mainActivity)
+                    materialAlertDialogBuilder.setMessage("사용 가능한 아이디 입니다")
+                    materialAlertDialogBuilder.setPositiveButton("확인", null)
+                    materialAlertDialogBuilder.show()
+                }
+            }
+
+            //checkUserIdNotDuplicate = true
+        }
+    }
+
+    // 데이터를 저장하고 이동한다.
+    fun saveUserData(){
+        CoroutineScope(Dispatchers.Main).launch {
+            // 사용자 번호 시퀀스 값을 가져온다.
+            val userSequence = UserDao.getUserSequence()
+            // Log.d("test1234", "UserSequence : $userSequence")
+            // 시퀀스값을 1 증가시켜 덮어씌워준다.
+            UserDao.updateUserSequence(userSequence + 1)
+
+            // 저장할 데이터를 가져온다.
+            val userIdx = userSequence + 1
+            val userId = joinViewModel.textFieldJoinUserId.value!!
+            val userPw = joinViewModel.textFieldJoinUserPw.value!!
+            val userName = joinViewModel.textFieldJoinUserName.value!!
+
+            val userGender = joinViewModel.gettingGender().num
+            val userEmail = joinViewModel.textFieldJoinUserEmail.value!!
+            val userMBTI = joinViewModel.textFieldJoinUserMBTI.value!!
+            val userConsent01 = joinViewModel.checkBoxJoinUserConsent01.value!!
+            val userConsent02 = joinViewModel.checkBoxJoinUserConsent02.value!!
+
+            val userState = UserState.USER_STATE_NORMAL.num
+
+            // 저장할 데이터를 객체에 담는다.
+            val userModel = UserModel(userIdx, userId, userPw, userName, userGender,
+                userEmail, userMBTI, userConsent01, userConsent02, userState)
+
+            // 사용자 정보를 저장한다.
+            UserDao.insertUserData(userModel)
+
+            val materialAlertDialogBuilder = MaterialAlertDialogBuilder(mainActivity)
+            materialAlertDialogBuilder.setTitle("가입완료")
+            materialAlertDialogBuilder.setMessage("가입이 완료되었습니다\n로그인해주세요")
+            materialAlertDialogBuilder.setPositiveButton("확인") { dialogInterface: DialogInterface, i: Int ->
+            mainActivity.removeFragment(MainFragmentName.JOIN_FRAGMENT)
+            }
+            materialAlertDialogBuilder.show()
         }
     }
 

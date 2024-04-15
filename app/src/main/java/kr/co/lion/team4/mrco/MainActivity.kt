@@ -18,11 +18,11 @@ import kr.co.lion.team4.mrco.fragment.appNotice.AppNoticeFragment
 import kr.co.lion.team4.mrco.fragment.cart.CartFragment
 import kr.co.lion.team4.mrco.fragment.category.CategoryFragment
 import kr.co.lion.team4.mrco.fragment.category.CategoryMainFragment
-import kr.co.lion.team4.mrco.fragment.home.coordinator.CoordinatorInfoFragment
 import kr.co.lion.team4.mrco.fragment.coordinatormain.CoordinatorMainFragment
 import kr.co.lion.team4.mrco.fragment.customerService.CustomerInquiryFragment
-import kr.co.lion.team4.mrco.fragment.home.coordinator.CoordinatorRankFragment
 import kr.co.lion.team4.mrco.fragment.customerService.CustomerServiceFragment
+import kr.co.lion.team4.mrco.fragment.home.coordinator.CoordinatorInfoFragment
+import kr.co.lion.team4.mrco.fragment.home.coordinator.CoordinatorRankFragment
 import kr.co.lion.team4.mrco.fragment.home.mbti.HomeMbtiFragment
 import kr.co.lion.team4.mrco.fragment.home.recommend.HomeRecommendFragment
 import kr.co.lion.team4.mrco.fragment.like.LikeCoordinatorFragment
@@ -51,11 +51,11 @@ import kr.co.lion.team4.mrco.fragment.productQna.RegisterQnaAnswerFragment
 import kr.co.lion.team4.mrco.fragment.review.CreateReviewFragment
 import kr.co.lion.team4.mrco.fragment.review.ReviewCreatedFragment
 import kr.co.lion.team4.mrco.fragment.review.ReviewFragment
-import kr.co.lion.team4.mrco.fragment.salesManagement.SalesManagementCalendarFragment
-import kr.co.lion.team4.mrco.fragment.salesManagement.SalesManagementFragment
 import kr.co.lion.team4.mrco.fragment.review.WriteReviewFragment
 import kr.co.lion.team4.mrco.fragment.salesManagement.ManageShipmentsFragment
 import kr.co.lion.team4.mrco.fragment.salesManagement.SalesListFragment
+import kr.co.lion.team4.mrco.fragment.salesManagement.SalesManagementCalendarFragment
+import kr.co.lion.team4.mrco.fragment.salesManagement.SalesManagementFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,6 +76,20 @@ class MainActivity : AppCompatActivity() {
 
         // 하단 바 설정(이동 관련)
         bottomSheetSetting()
+
+//        // 자동로그인시 저장된 사용자 정보를 가져온다.
+//        val sharedPreferences = getSharedPreferences("AutoLogin", MODE_PRIVATE)
+//        val loginUserIdx = sharedPreferences.getInt("loginUserIdx", -1)
+//        val loginUserName = sharedPreferences.getString("loginUserNickName", null)
+//
+//        // 자동 로그인시 저장된 사용자 인덱스값이 없다면(자동로그인을 체크하지 않았다면)
+//        if(loginUserIdx == -1) {
+//            // 첫 화면을 띄워준다.
+//            replaceFragment(MainFragmentName.LOGIN_FRAGMENT, false, false, null)
+//        }
+//        // 그렇지 않으면
+//        else {
+//        }
 
         // 홈 화면(추천, MBTI 별 코디, 인기 코디네이터, 코디네이터 소개, 코디네이터 메인) - (원빈)완료
         // 탭으로 화면 이동 가능
